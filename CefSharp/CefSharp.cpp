@@ -6,7 +6,6 @@
 #include "CefSharp.h"
 #include "ClientAdapter.h"
 #include "CefFormsWebBrowser.h"
-#include "CefWpfWebBrowser.h"
 
 namespace CefSharp 
 {
