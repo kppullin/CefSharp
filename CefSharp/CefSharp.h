@@ -7,6 +7,7 @@
 #include "include/cef_runnable.h"
 #include "include/cef_version.h"
 #include "include/cef_task.h"
+#include "CookieVisitor.h"
 #include "Settings.h"
 #include "SchemeHandler.h"
 #include "StringUtil.h"
@@ -119,6 +120,37 @@ namespace CefSharp
             return true;
         }
 
+        static bool VisitAllCookies(ICookieVisitor^ visitor)
+        {
+            CefRefPtr<CookieVisitor> cookieVisitor = new CookieVisitor(visitor);
+            CefRefPtr<CefCookieManager> manager = CefCookieManager::GetGlobalManager();
+
+            if (manager != nullptr)
+            {
+                manager->VisitAllCookies(static_cast<CefRefPtr<CefCookieVisitor>>(cookieVisitor));
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        static bool VisitUrlCookies(String^ url, bool includeHttpOnly, ICookieVisitor^ visitor)
+        {
+            CefRefPtr<CookieVisitor> cookieVisitor = new CookieVisitor(visitor);
+            CefRefPtr<CefCookieManager> manager = CefCookieManager::GetGlobalManager();
+
+            if (manager != nullptr)
+            {
+                return manager->VisitUrlCookies(toNative(url), includeHttpOnly,
+                    static_cast<CefRefPtr<CefCookieVisitor>>(cookieVisitor));
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         static bool SetCookie(String^ url, String^ name, String^ value, String^ domain, String^ path, bool secure, bool httponly, bool has_expires, DateTime expires)
         {
             msclr::lock l(_sync);
@@ -176,7 +208,16 @@ namespace CefSharp
 
         static bool SetCookiePath(String^ path)
         {
-            return CefCookieManager::GetGlobalManager()->SetStoragePath(toNative(path));
+            CefRefPtr<CefCookieManager> manager = CefCookieManager::GetGlobalManager();
+
+            if (manager != nullptr)
+            {
+                return manager->SetStoragePath(toNative(path));
+            }
+            else
+            {
+                return false;
+            }
         }
 
         static void Shutdown()
